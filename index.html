@@ -88,7 +88,17 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outlin
   padding-block: 14px 8px;
   display: grid; gap: 10px;
 }
-.titlerow { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.titlerow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.mnav { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.mbtn {
+  flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; border: 0;
+  background: var(--off); color: var(--ink); font-size: 18px; font-weight: 700; line-height: 1;
+  cursor: pointer; display: grid; place-items: center; padding: 0 0 2px;
+}
+.mbtn:disabled { visibility: hidden; }
+.mbtn:active { transform: scale(.92); }
+.mnav .title { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 380px) { .title small { display: none; } }
 .title { font-family: var(--f-display); font-weight: 700; font-size: 22px; margin: 0; letter-spacing: .02em; }
 .title small { font-size: 13px; color: var(--muted); font-weight: 500; margin-left: 6px; letter-spacing: 0; }
 .todaybtn {
@@ -299,7 +309,11 @@ details.more[open] summary::before { content: "－ "; }
 <div class="wrap">
   <header class="top">
     <div class="titlerow">
-      <h1 class="title" id="ttl">10月の給食<small>はちの木こども園</small></h1>
+      <div class="mnav">
+        <button class="mbtn" id="m-prev" aria-label="前の月">‹</button>
+        <h1 class="title" id="ttl">給食こんだて<small>はちの木こども園</small></h1>
+        <button class="mbtn" id="m-next" aria-label="次の月">›</button>
+      </div>
       <button class="todaybtn" id="todaybtn" hidden>今日</button>
     </div>
     <nav class="strip" id="strip" aria-label="日付をえらぶ"></nav>
@@ -338,8 +352,10 @@ details.more[open] summary::before { content: "－ "; }
 </nav>
 
 <script>
-/* ===== 毎月ここを差し替える ===== */
-const MONTH = {
+/* ===== 毎月ここに1か月分を追加する（古い月は消してOK） ===== */
+const MONTHS = [];
+
+MONTHS.push({
   year: 2026, month: 10,
   school: "はちの木こども園",
   // m: 給食（麦茶は省略）, am: 午前のおやつ, pm: 午後のおやつ
@@ -444,8 +460,135 @@ const MONTH = {
     31: { u:[359,12.5,7.1,1.2],  o:[417,14.7,8.5,1.3] },
     avg:{ u:[480,17.0,15.3,1.6], o:[575,21.0,18.5,1.9] },
   },
-};
+});
+
+MONTHS.push({
+  year: 2026, month: 11,
+  school: "はちの木こども園",
+  // m: 給食（麦茶は省略）, am: 午前のおやつ, pm: 午後のおやつ
+  // r: 血・肉・骨になる（赤）, y: 熱や力になる（黄）, g: 体の調子を整える（緑）
+  days: {
+    1:  { off:"日曜日" },
+    2:  { m:["けんちん煮","ツナサラダ","味噌汁","オレンジ"], am:"クラッカー", pm:["芋ようかん","牛乳"],
+          r:"豚肉、ツナ、豆腐、味噌、牛乳", y:"里芋、砂糖、米、マヨネーズ、栗、さつま芋", g:"コンニャク、人参、ごぼう、大根、しいたけ、グリンピース、ほうれん草、オレンジ" },
+    3:  { off:"祝日（文化の日）", hol:true },
+    4:  { m:["豆腐とツナのハンバーグ","味噌汁","フレンチサラダ"], am:"南瓜ボーロ", pm:["コーンパン","牛乳"],
+          r:"豆腐、ツナ、卵、味噌、スキムミルク、牛乳", y:"パン粉、油、米、じゃが芋、マヨネーズ、ホットケーキミックス", g:"玉葱、キャベツ、レタス、胡瓜、人参、インゲン、コーン",
+          ev:"運動会 総練習（2〜5歳）", evNote:"はいチーズのカメラマンさんが練習の様子を撮影" },
+    5:  { m:["ホキ西京漬け","味噌汁","肉じゃが"], am:"のり煎餅", pm:["おにぎり","牛乳"],
+          r:"ホキ、豚肉、豆腐、味噌、牛乳、海苔", y:"じゃが芋、油、砂糖、米、ゴマ", g:"しらたき、人参、しいたけ、玉葱、インゲン、ニラ",
+          ev:"運動会（2〜5歳）", evNote:"観音山ファミリーパーク スポレク広場。8:50集合・9:00開始、12:00終了予定。雨の場合は9日（月）に延期（朝メールで連絡）" },
+    6:  { m:["ベイクドポテト","華風和え物","コンソメスープ"], am:"イワシおかき", pm:["ハムサンド（サンドイッチ作り）","牛乳"],
+          r:"生クリーム、チーズ、卵、ベーコン、ハム、牛乳", y:"じゃが芋、油、バター、砂糖、ゴマ油、米、マヨネーズ、パン", g:"玉葱、コーン、パセリ、青梗菜、人参、もやし、胡瓜、ほうれん草" },
+    7:  { m:["トマトとエビのスパゲッティ","バナナ"], am:"", pm:["食パンサンド","せんべい","牛乳"],
+          r:"エビ、ベーコン、牛乳", y:"スパゲッティ、油、食パン、ジャム", g:"玉葱、ピーマン、トマト缶、バナナ" },
+    8:  { off:"日曜日" },
+    9:  { m:["シュウマイ","豚汁","切り干し大根の煮物"], am:"小魚煎餅", pm:["おにぎり","牛乳"],
+          r:"シュウマイ、油揚げ、牛乳、豚肉、豆腐、味噌、竹輪、ワカメ、海苔", y:"じゃが芋、油、砂糖、米", g:"切り干し大根、人参、玉葱、干ししいたけ",
+          ev:"運動会 予備日", evNote:"5日が雨のときはこの日に実施" },
+    10: { m:["焼き魚（サバ）","味噌汁","マカロニサラダ"], am:"星煎餅", pm:["蒸しさつま芋","みかん","牛乳"],
+          r:"サバ、ハム、豆腐、味噌、ワカメ、牛乳", y:"マカロニ、マヨネーズ、米、さつま芋", g:"人参、胡瓜、みかん缶、りんご、みかん",
+          ev:"七五三参り（にじ・つき組）", evNote:"3〜5歳児。定家神社までお散歩。お昼は園で食べます。雨天の場合は日程変更" },
+    11: { m:["きのこカレー","カラフルサラダ","オレンジ"], am:"花煎餅", pm:["胡麻クッキー","牛乳"],
+          r:"豚肉、卵、牛乳", y:"じゃが芋、油、米、ゴマ、粉、バター", g:"人参、しめじ、しいたけ、オレンジ、玉葱、マッシュルーム、胡瓜、コーン、レタス、トマト、ブロッコリー",
+          ev:"歯科保健指導（2〜5歳児）", evNote:"高崎市の歯科保健指導。歯ブラシの毛先が広がっていたら取り替えを" },
+    12: { m:["チキンマリネ","コーンスープ","野菜の胡麻マヨネーズ和え"], am:"クラッカー", pm:["生クリームサンド","牛乳"],
+          r:"鶏肉、牛乳、生クリーム", y:"砂糖、片栗粉、油、ゴマ、ゴマ油、パン、マヨネーズ、米", g:"人参、玉葱、ピーマン、レモン、胡瓜、ほうれん草、パセリ、コーン、みかん缶",
+          ev:"七五三参り（そら・ほし・ゆき組）", evNote:"3〜5歳児。定家神社までお散歩。お昼は園で食べます。雨天の場合は日程変更" },
+    13: { m:["魚のチーズ焼き","ブロッコリー","醤油フレンチ","味噌汁"], am:"エビ煎餅", pm:["バナナケーキ","牛乳"],
+          r:"メカジキ、竹輪、豆腐、味噌、牛乳、スキムミルク", y:"粉、バター、油、ホットケーキミックス、米", g:"パセリ、ブロッコリー、ほうれん草、トマト、もやし、なめこ、三つ葉、バナナ",
+          ev:"千歳飴のお土産", evNote:"七五三のお土産に千歳飴が出ます" },
+    14: { m:["きつねうどん","バナナ"], am:"", pm:["食パンサンド","せんべい","牛乳"],
+          r:"鶏肉、油揚げ、牛乳", y:"うどん、砂糖、食パン、ジャム", g:"人参、しいたけ、長葱、バナナ" },
+    15: { off:"日曜日" },
+    16: { m:["親子煮","コールスローサラダ","味噌汁"], am:"小煮干し", pm:["稲荷ずし","牛乳"],
+          r:"鶏肉、卵、ナルト、豆腐、味噌、牛乳、油揚げ", y:"砂糖、米、油、じゃが芋", g:"人参、玉葱、しいたけ、胡瓜、キャベツ、レタス、りんご、ほうれん草" },
+    17: { m:["松風焼き","きつねうどん","ブロッコリーお浸し"], am:"花煎餅", pm:["豆乳ケーキ","牛乳"],
+          r:"鶏肉、卵、ひじき、海苔、油揚げ、豆乳、牛乳", y:"パン粉、ゴマ、砂糖、うどん、バター、米、ホットケーキミックス", g:"人参、玉葱、しそ、生姜、ブロッコリー、コーン、長葱、しいたけ" },
+    18: { m:["タラ葱みそ焼き","関東煮","味噌汁"], am:"バナナチップ", pm:["揚げパン","牛乳"],
+          r:"タラ、豚肉、味噌、うずら卵、さつま揚げ、豆腐、きなこ、牛乳", y:"里芋、砂糖、米、パン、油", g:"大根、人参、こんにゃく、ニラ、しいたけ、長葱" },
+    19: { m:["酢豚","大豆サラダ","笹身スープ"], am:"イワシおかき", pm:["プチドック","牛乳"],
+          r:"豚肉、うずら卵、大豆、豆腐、鶏肉、ウインナー、牛乳", y:"油、砂糖、片栗粉、米、マヨネーズ、ホットケーキミックス", g:"人参、しいたけ、玉葱、胡瓜、ピーマン、パイン缶、竹の子、キャベツ、大根、三つ葉、えのき茸" },
+    20: { m:["サラサ揚げ","カレーサラダ","春雨スープ","みかん"], drink:"りんごジュース", am:"星煎餅", pm:["ショートケーキ","牛乳"],
+          r:"豚肉、卵、牛乳、生クリーム", y:"粉、油、米、マロニー、マヨネーズ、ゴマ油、砂糖", g:"玉葱、コーン、ブロッコリー、胡瓜、人参、えのき茸、紅生姜、インゲン、葉葱、みかん、いちご",
+          ev:"誕生日会・避難訓練", evNote:"今月の誕生会は金曜日。お祝いメニューの日" },
+    21: { m:["焼きそば","バナナ"], am:"", pm:["食パンサンド","せんべい","牛乳"],
+          r:"豚肉、牛乳", y:"焼きそば麺、油、食パン、ジャム", g:"人参、ピーマン、玉葱、キャベツ、もやし、バナナ" },
+    22: { off:"日曜日" },
+    23: { off:"祝日（勤労感謝の日）", hol:true },
+    24: { m:["ツナオムレツ","ナムル","味噌汁"], am:"小煮干し", pm:["二色おはぎ","牛乳"],
+          r:"卵、ツナ、味噌、ワカメ、きなこ、牛乳", y:"油、ゴマ、ゴマ油、米、じゃが芋、もち米、砂糖", g:"人参、玉葱、ピーマン、コーン、ほうれん草、胡瓜、もやし、長葱" },
+    25: { m:["めかじき照り焼き","炒り豆腐","味噌汁"], am:"ビスケット", pm:["黒糖ロールパン","みかん","牛乳"],
+          r:"メカジキ、豆腐、卵、豚肉、味噌、牛乳", y:"砂糖、米、じゃが芋、油、パン", g:"人参、しいたけ、玉葱、生姜、インゲン、みかん" },
+    26: { m:["豚肉のアップルソース","海藻サラダ","中華コーンスープ"], am:"花煎餅", pm:["たい焼き","のり煎餅","牛乳"],
+          r:"豚肉、ワカメ、イカ、卵、牛乳", y:"粉、片栗粉、砂糖、ゴマ油、小豆、米", g:"玉葱、りんご、生姜、胡瓜、キャベツ、人参、パセリ、コーン" },
+    27: { m:["里芋とイカの煮物","コンソメスープ","スパゲティサラダ"], am:"小魚煎餅", pm:["磯風味ポテト","牛乳"],
+          r:"イカ、ハム、豆腐、小女子、青のり、牛乳", y:"里芋、砂糖、米、スパゲッティ、油、じゃが芋、マヨネーズ", g:"大根、人参、グリンピース、りんご、みかん缶、胡瓜、三つ葉、えのき茸" },
+    28: { m:["きつねうどん","バナナ"], am:"", pm:["食パンサンド","せんべい","牛乳"],
+          r:"鶏肉、油揚げ、牛乳", y:"うどん、砂糖、食パン、ジャム", g:"人参、しいたけ、長葱、バナナ" },
+    29: { off:"日曜日" },
+    30: { m:["鮭のもみじ焼き","きつねうどん","ひじきの中華和え"], am:"のり煎餅", pm:["フルーツヨーグルト","ウエハース","牛乳"],
+          r:"鮭、ひじき、鶏肉、しらす干し、油揚げ、ヨーグルト、牛乳", y:"マヨネーズ、砂糖、うどん、ゴマ油、米", g:"人参、小松菜、キャベツ、しいたけ、長葱、りんご、レモン、バナナ、フルーツミックス" },
+  },
+  notes: [
+    "11月から冬スモックを着用します。登園・降園時や外遊びで使うので持ってきておいてください",
+    "運動会（5日）は観音山ファミリーパークに集合・解散。服装はスポーツウェア上下・カラー帽子。3歳児以上はリュックに水筒（ダイレクトに飲めるタイプ）とタオル",
+    "運動会の観覧席の一部は年長児保護者の優先席。駐車場の開門は8時。園児席には近寄らないようにお願いします",
+    "今月の誕生会は金曜日（20日）です",
+  ],
+  // 栄養価 [エネルギーkcal, たんぱく質g, 脂質g, 食塩相当量g]。u: 未満児, o: 以上児。記載なし・誤植は null
+  nutri: {
+    2:  { u:[486,13.5,14.1,1.4], o:[579,16.8,16.3,1.5] },
+    4:  { u:[492,15.8,13.6,1.3], o:[585,19.8,17.2,1.8] },
+    5:  { u:[506,22.9,9.4,1.6],  o:[null,null,null,null] },
+    6:  { u:[456,16.0,15.1,1.9], o:[559,19.4,19.3,2.3] },
+    7:  { u:[404,15.6,8.7,1.5],  o:[473,18.5,10.6,1.7] },
+    9:  { u:[509,18.1,15.4,1.6], o:[616,22.5,18.5,1.9] },
+    10: { u:[511,18.3,18.1,1.0], o:[621,23.1,22.0,1.3] },
+    11: { u:[490,13.3,15.5,1.2], o:[587,16.2,19.6,1.8] },
+    12: { u:[504,16.4,17.6,1.5], o:[600,20.2,20.7,1.9] },
+    13: { u:[485,24.3,11.8,1.6], o:[590,30.1,14.8,1.8] },
+    14: { u:[369,13.6,9.1,1.8],  o:[430,16.0,10.9,2.3] },
+    16: { u:[488,18.4,null,1.5], o:[608,21.8,16.1,1.7] },
+    17: { u:[515,20.7,15.6,1.4], o:[617,25.8,19.2,2.1] },
+    18: { u:[495,23.3,14.1,1.7], o:[572,29.1,14.8,2.2] },
+    19: { u:[504,18.2,20.0,1.9], o:[620,22.7,25.0,2.2] },
+    20: { u:[523,15.6,18.7,1.2], o:[636,19.3,22.9,1.5] },
+    21: { u:[359,12.5,7.1,1.2],  o:[417,14.7,8.5,null] },
+    24: { u:[465,17.2,11.9,1.5], o:[583,20.3,14.9,1.7] },
+    25: { u:[514,22.9,14.7,1.8], o:[577,28.3,14.5,2.0] },
+    26: { u:[461,16.9,10.3,1.6], o:[550,20.5,12.9,2.2] },
+    27: { u:[509,15.0,20.2,1.5], o:[618,18.6,24.7,1.8] },
+    28: { u:[369,13.6,9.1,1.8],  o:[430,16.0,10.9,2.3] },
+    30: { u:[489,21.1,14.6,1.9], o:[597,26.2,18.5,2.2] },
+    avg:{ u:[494,18.1,15.2,1.5], o:[595,22.3,18.4,1.9] },
+  },
+});
 /* ===== ここまで ===== */
+
+/* 表示する月を決める。月の切り替えボタンで選んだ月 → 今日の月 → これからの月 → いちばん新しい月 */
+MONTHS.sort((a, b) => (a.year * 12 + a.month) - (b.year * 12 + b.month));
+const monthKey = m => `${m.year}-${m.month}`;
+const nowD = new Date();
+const curIdx = MONTHS.findIndex(m => m.year === nowD.getFullYear() && m.month === nowD.getMonth() + 1);
+function autoMonthIdx() {
+  if (curIdx >= 0) return curIdx;
+  const v = nowD.getFullYear() * 12 + nowD.getMonth() + 1;
+  const next = MONTHS.findIndex(m => m.year * 12 + m.month > v);
+  return next >= 0 ? next : MONTHS.length - 1;
+}
+let mIdx = autoMonthIdx();
+try {
+  const k = sessionStorage.getItem("kondate-month");
+  const i = MONTHS.findIndex(m => monthKey(m) === k);
+  if (i >= 0) mIdx = i;
+} catch (e) {}
+const MONTH = MONTHS[mIdx];
+function goMonth(i) {
+  if (i < 0 || i >= MONTHS.length) return;
+  try { sessionStorage.setItem("kondate-month", monthKey(MONTHS[i])); } catch (e) {}
+  location.reload();
+}
 
 const WD = ["日","月","火","水","木","金","土"];
 const Y = MONTH.year, M = MONTH.month;
@@ -462,9 +605,9 @@ const CATS = {
 };
 const has = (s, words) => words.some(w => s.includes(w));
 function classify(name) {
-  if (has(name, ["サラダ","和え","きんぴら","煮物","千キャベツ","八宝菜","フレンチ","関東煮"]) || name === "ブロッコリー") return "side";
+  if (has(name, ["サラダ","和え","きんぴら","煮物","千キャベツ","八宝菜","フレンチ","関東煮","お浸し","ナムル"]) || name === "ブロッコリー") return "side";
   if (has(name, ["汁","スープ"])) return "soup";
-  if (has(name, ["バナナ","オレンジ","梨","りんご","メロン"])) return "fruit";
+  if (has(name, ["バナナ","オレンジ","梨","りんご","メロン","みかん","いちご"])) return "fruit";
   if (has(name, ["うどん","そば","スパゲッティ","スパゲティ","カレー","ライス","ご飯","ごはん","パン"])) return "staple";
   return "main";
 }
@@ -484,9 +627,13 @@ function firstServing(from) {
   for (let d = from; d <= lastDay; d++) if (!info(d).off) return d;
   return null;
 }
+// 今月の給食がもう残っていなくて、この月が次の月なら、最初の給食日に「次の給食」と出す
+const curHasMore = curIdx >= 0 &&
+  Object.entries(MONTHS[curIdx].days).some(([d, i]) => !i.off && +d > nowD.getDate());
+const showNext = beforeMonth && mIdx === (curIdx >= 0 ? curIdx + 1 : autoMonthIdx()) && !curHasMore;
 function relLabel(d) {
   if (todayNum == null) {
-    if (beforeMonth && d === firstServing(1)) return "次の給食";
+    if (showNext && d === firstServing(1)) return "次の給食";
     return "";
   }
   if (d === todayNum) return "今日";
@@ -530,7 +677,7 @@ function nutriHTML(d) {
       <p class="nv">${val == null ? `<span class="na">—</span>` : `${val}<small>${unit}</small>`}</p>
       ${avg[k] != null ? `<p class="avg">月平均 ${fmt(avg[k], k)}${unit}</p>` : ""}</div>`;
   }).join("");
-  const missing = v.some(x => x == null) ? `<p class="drink">「—」は献立表の数値に誤りがあるため載せていません</p>` : "";
+  const missing = v.some(x => x == null) ? `<p class="drink">「—」は献立表に記載がない、または誤りがあるため載せていない項目です</p>` : "";
   return `<div class="sec">
       <div class="nhead"><p class="label">栄養価</p>
         <div class="age" role="group" aria-label="年齢区分">
@@ -664,15 +811,26 @@ card.addEventListener("touchend", () => {
   setTimeout(() => card.classList.remove("sliding"), 220);
 });
 
-/* 「今日」ボタン（今月でなければ「次の給食」へ） */
+/* 「今日」ボタン。別の月を見ているときは、今日の月（なければ次の月）へ戻る */
 const homeDay = selected;
 const todayBtn = document.getElementById("todaybtn");
-todayBtn.textContent = todayNum != null ? "今日" : "次の給食";
-todayBtn.onclick = () => { select(homeDay); window.scrollTo({ top: 0, behavior: "smooth" }); };
+const onHomeMonth = mIdx === autoMonthIdx();
+todayBtn.textContent = (todayNum != null || (!onHomeMonth && curIdx >= 0)) ? "今日" : "次の給食";
+todayBtn.onclick = () => {
+  if (!onHomeMonth) { goMonth(autoMonthIdx()); return; }
+  select(homeDay); window.scrollTo({ top: 0, behavior: "smooth" });
+};
 function updateTodayBtn() {
   const inDay = !document.getElementById("view-day").hidden;
-  todayBtn.hidden = inDay && selected === homeDay;
+  todayBtn.hidden = onHomeMonth && inDay && selected === homeDay;
 }
+
+/* 月の切り替え */
+const mPrev = document.getElementById("m-prev"), mNext = document.getElementById("m-next");
+mPrev.disabled = mIdx <= 0;
+mNext.disabled = mIdx >= MONTHS.length - 1;
+mPrev.onclick = () => goMonth(mIdx - 1);
+mNext.onclick = () => goMonth(mIdx + 1);
 
 /* list view */
 const list = document.getElementById("list");

@@ -1,4 +1,4 @@
-const CACHE = "kondate-1790739523";
+const CACHE = "kondate-1792892048";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
