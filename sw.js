@@ -28,8 +28,9 @@ self.addEventListener("fetch", e => {
   }
   if (url.origin !== location.origin) return;
   // アプリ本体は、ネットにつながれば最新を、つながらなければ保存しておいたものを表示
+  // （ブラウザの一時保存を使わず、毎回GitHubに最新版を確認する）
   e.respondWith(
-    fetch(req)
+    fetch(new Request(req.url, { cache: "no-cache", credentials: "same-origin" }))
       .then(res => { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); return res; })
       .catch(() => caches.match(req).then(r => r || caches.match("./index.html")))
   );
